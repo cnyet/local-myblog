@@ -48,6 +48,7 @@
     "gulp.spritesmith": "^6.2.1",
     "jshint": "^2.9.4",
     "jshint-stylish": "^2.2.1",
-    "run-sequence": "^1.2.2"
+    "run-sequence": "^1.2.2",
+    "webpack": "^1.13.3"
   }
 }
