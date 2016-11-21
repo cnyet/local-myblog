@@ -53,33 +53,49 @@ var pkg = require("./package.json"),
         ''
     ].join('\n');
 //将图片拷贝到目标目录
-gulp.task("copy:images", function (done) {
-    gulp.src("src/images/**/*")
-        .pipe(gulp.dest("dist/images"))
-        .on("end", done);
+gulp.task("copy:images", function () {
+    return gulp.src("src/images/**/*")
+        .pipe(gulp.dest("dist/images"));
+});
+//在html文件中引入include文件
+gulp.task("includefile", function () {
+    var options = {
+        removeComments: true,                   //清除html注释
+        collapseBooleanAttributes: true,        //省略布尔属性值
+        collapseWhitespace: false,              //压缩页面
+        removeEmptyAttributes: true,            //删除所有空格作为属性值
+        removeScriptTypeAttributes: true,       //删除script的type属性
+        removeStyleTypeAttributes: true,        //删除link的type属性
+        minifyJS: true,                         //压缩页面js
+        minifyCSS: true                         //压缩页面css
+    };
+    return gulp.src("src/*.html")
+        .pipe(fileinclude({
+            prefix: "@@",
+            basepath: "@file"
+        }))
+        .pipe(minifyhtml(options))
+        .pipe(gulp.dest("dist/"))
 });
 //压缩合并样式文件，包括先把less文件编译成css和引入的第三方css
-gulp.task("cssmin", function (done) {
-    var cssFilter = filter("**/components.css", {restore: true}),
+gulp.task("cssmin", function () {
+    var cssFilter = filter("**/default.css", {restore: true}),
         lessFilter = filter("**/main.less", {restore: true});
-    gulp.src(["src/css/**"])
+    return gulp.src(["src/css/**"])
         .pipe(lessFilter)
         .pipe(less())
-        .pipe(concat("default.min.css"))
+        .pipe(concat("style.css"))
         .pipe(minifycss())
         .pipe(lessFilter.restore)
         .pipe(cssFilter)
-        .pipe(concat("components.min.css"))
         .pipe(minifycss())
         .pipe(cssFilter.restore)
-        .pipe(md5(10, 'dist/*.html'))
-        .pipe(gulp.dest("dist/css"))
-        .on("end", done);
+        .pipe(gulp.dest("dist/css"));
 });
 //雪碧图操作，先拷贝图片合并压缩css
-gulp.task("sprite", ["copy:images", "cssmin"], function (done) {
+gulp.task("sprite", ["copy:images", "cssmin"], function () {
     var timestamp = +new Date();
-    gulp.src("dist/css/default.min.css")
+    return gulp.src("dist/css/default.css")
         .pipe(spriter({
             //生成sprite的位置
             spriteSheet: "dist/images/spritesheet" + timestamp + ".png",
@@ -90,8 +106,7 @@ gulp.task("sprite", ["copy:images", "cssmin"], function (done) {
             }
         }))
         .pipe(base64())
-        .pipe(gulp.dest("dist/css"))
-        .on("end", done);
+        .pipe(gulp.dest("dist/css"));
 });
 var myDevConfig = Object.create(webpackConfig);
 var devCompiler = webpack(myDevConfig);
@@ -105,41 +120,26 @@ gulp.task("build-js", ['fileinclude'], function(callback) {
         callback();
     });
 });
-//合并压缩js, 加MD5，更改页面引用路径
-gulp.task("jsmin", ["includefile"], function (done) {
-    var vendorFilter = filter("**/js/vendor/*.js", {restore: true}),
-        defaultFilter = filter("**/js/*.js", {restore: true});
-    return gulp.src("dist/js/**/*.js")
-        .pipe(defaultFilter)
-        .pipe(concat("common.min.js"))
-        .pipe(uglify())
-        .pipe(header(info, {pkg: pkg}))
-        .pipe(defaultFilter.restore)
-        .pipe(vendorFilter)
-        .pipe(concat("vendor.min.js"))
-        .pipe(uglify())
-        .pipe(vendorFilter.restore)
+//将js加上10位md5,并修改html中的引用路径，该动作依赖build-js
+gulp.task('md5:js', ['build-js'], function () {
+    gulp.src('dist/js/*.js')
         .pipe(md5(10, 'dist/*.html'))
-        .pipe(gulp.dest("dist/js"));
+        .pipe(gulp.dest('dist/js'));
 });
-//在html文件中引入include文件
-gulp.task("includefile", function (done) {
-    return gulp.src("src/*.html")
-        .pipe(fileinclude({
-            prefix: "@@",
-            basepath: "@file"
-        }))
-        .pipe(gulp.dest("dist/"))
+//将css加上10位md5，并修改html中的引用路径，该动作依赖sprite
+gulp.task('md5:css', ['sprite'], function () {
+    return gulp.src('dist/css/*.css')
+        .pipe(md5(10, 'dist/*.html'))
+        .pipe(gulp.dest('dist/css'));
 });
 //清除文件
-gulp.task('clean', function (done) {
+gulp.task('clean', function () {
     return gulp.src(['dist'])
         .pipe(clean())
 });
 //监听文件变化
-gulp.task('watch', function (done) {
-    gulp.watch('src/**/*', ['includefile', 'dev:css', 'dev:js'])
-        .on('end', done);
+gulp.task('watch', function () {
+    return gulp.watch('src/**/*', ['cssmin', 'build-js', 'includefile']);
 });
 //定义web服务器
 gulp.task('connect', function () {
@@ -151,17 +151,16 @@ gulp.task('connect', function () {
     });
 });
 //自动在浏览器发开页面
-gulp.task('open', function (done) {
-    gulp.src('')
+gulp.task('open', function () {
+    return gulp.src('')
         .pipe(gulpOpen({
             app: browser,
             uri: 'http://localhost:3000/'
-        }))
-        .on('end', done);
+        }));
 });
 
 //发布
 gulp.task('default', ['connect', 'includefile', 'md5:css', 'md5:js', 'open']);
 
 //开发
-gulp.task('dev', ['connect', 'copy:images', 'includefile', 'dev:css', 'dev:js', 'watch', 'open']);
+gulp.task('dev', ['connect', 'copy:images', 'includefile', 'cssmin', 'build-js', 'watch', 'open']);
