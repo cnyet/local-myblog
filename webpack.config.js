@@ -23,8 +23,8 @@ function getEntry() {
 module.exports = {
     cache: true,
     devtool: 'source-map',                          //配置生成Source Maps，选择合适的选项
-    //entry: getEntry(),                              //文件入口目录
-    entry: __dirname + "/src/js/main.js",
+    entry: getEntry(),                              //文件入口目录
+    //entry: __dirname + "/src/js/main.js",
     output: {
         path: __dirname + "/dist/js",               //文件输出目录
         publicPath: "dist/js/",                     //用于配置文件发布路径，如CDN或本地服务器
