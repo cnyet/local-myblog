@@ -2,10 +2,16 @@
 <html lang="en">
 <head>
     @@include("include/head.inc")
+    <!-- build:css css/components.min.css -->
+    <link type="text/css" rel="stylesheet" href="css/dedault.css">
+    <!-- endbuild -->
+    <!-- build:css css/style.min.css -->
+    <link type="text/css" rel="stylesheet" href="css/main.less">
+    <!-- endbuild -->
     <title>首页</title>
 </head>
 <body>
-<nav class="navbar navbar-inverse navbar-fixed-top" role="navigation">
+<nav class="navbar navbar-inverse" role="navigation">
     <div class="container">
         <div class="navbar-header">
             <button type="button" class="navbar-toggle collapsed" data-toggle="collapse" data-target="#navbar" aria-expanded="false" aria-controls="navbar">
@@ -22,11 +28,11 @@
                 <li><a href="#about">About</a></li>
                 <li><a href="#contact">Contact</a></li>
             </ul>
-        </div><!--/.nav-collapse -->
+        </div>
     </div>
 </nav>
-<h1>首页</h1>
-
+<h1 class="wrap">首页</h1>
+@@include("include/foot.inc")
 <script type="text/javascript" src="js/common.js"></script>
 <script type="text/javascript" src="js/main.js"></script>
 </body>

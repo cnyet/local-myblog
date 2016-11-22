@@ -1,0 +1,1 @@
+<p>&copy; Powered by Yate</p>

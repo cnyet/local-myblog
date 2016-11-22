@@ -5,8 +5,8 @@ var gulp = require("gulp"),                                 //gulp基础库
     stylelish = require("jshint-stylish"),                  //js错误信息高亮显示
     csslint = require("gulp-csslint"),                      //审查css代码
     less = require("gulp-less"),                            //将less编译成css
-    minifycss = require("gulp-minify-css"),                 //压缩css文件
-    minifyhtml = require("gulp-minify-html"),               //压缩html文件
+    minifycss = require("gulp-clean-css"),                 //压缩css文件
+    htmlmin = require("gulp-htmlmin"),                      //压缩html文件
     imagemin = require("gulp-imagemin"),                    //压缩图片
     header = require("gulp-header"),                        //用来在压缩后的JS、CSS文件中添加头部注释
     spritesmith = require("gulp.spritesmith"),              //合并sprite小图片，生成单独的css和一张大图
@@ -34,7 +34,7 @@ var gulp = require("gulp"),                                 //gulp基础库
     webpackConfig = require('./webpack.config.js');         //引入webpack的配置文件
 
 var host = {
-    path: "dist/",
+    path: "dist/assets/",
     port: 3000,
     html: "index.html"
 };
@@ -44,65 +44,66 @@ var browser = os.platform() === "linux" ? "Google chrome" : (
         os.platform() === "win32" ? "chrome" : "firefox"
     )
 );
-var pkg = require("./package.json"),
-    //添加注释信息到自己编辑的文件头部
-    info = ['/**',
-        ' * <%= pkg.name %> - <%= pkg.description %>',
-        ' * @author <%= pkg.author %>',
-        ' * @version v<%= pkg.version %>',
-        ' */',
-        ''
-    ].join('\n');
+var options = {
+    removeComments: true,                   //清除html注释
+    collapseBooleanAttributes: true,        //省略布尔属性值
+    removeEmptyAttributes: true,            //删除所有空格作为属性值
+    removeScriptTypeAttributes: true,       //删除script的type属性
+    removeStyleTypeAttributes: true,        //删除link的type属性
+    minifyJS: true,                         //压缩页面js
+    minifyCSS: true                         //压缩页面css
+};
 //将图片拷贝到目标目录
 gulp.task("copy:images", function () {
-    return gulp.src("src/images/**/*")
-        .pipe(gulp.dest("dist/images"));
+    return gulp.src("src/assets/images/**/*", {base: "src"})
+        .pipe(gulp.dest("dist/"));
 });
-//在html文件中引入include文件
-gulp.task("includefile", function () {
-    var options = {
-        removeComments: true,                   //清除html注释
-        collapseBooleanAttributes: true,        //省略布尔属性值
-        collapseWhitespace: false,              //压缩页面
-        removeEmptyAttributes: true,            //删除所有空格作为属性值
-        removeScriptTypeAttributes: true,       //删除script的type属性
-        removeStyleTypeAttributes: true,        //删除link的type属性
-        minifyJS: true,                         //压缩页面js
-        minifyCSS: true                         //压缩页面css
-    };
-    return gulp.src("src/*.html")
+//拷贝其他文件到目标文件夹
+gulp.task("copy:file", function () {
+    return gulp.src(["src/controllers/**/*", "src/modules/**/*"], {base: "src"})
+        .pipe(gulp.dest("dist/"));
+});
+//编译首页css
+gulp.task("useref", function () {
+    var cssFilter = filter("**/components.min.css", {restore: true}),
+        lessFilter = filter("**/style.min.css", {restore: true});
+    return gulp.src("src/assets/index.html")
         .pipe(fileinclude({
-            prefix: "@@",
-            basepath: "@file"
+            prefix: '@@',
+            basepath: '@file'
         }))
-        //.pipe(minifyhtml(options))
-        .pipe(gulp.dest("dist/"))
-        .pipe(connect.reload());
-});
-//压缩合并样式文件，包括先把less文件编译成css和引入的第三方css
-gulp.task("cssmin", function () {
-    var cssFilter = filter("**/default.css", {restore: true}),
-        lessFilter = filter("**/main.css", {restore: true});
-    return gulp.src(["src/css/*.css"])
-        .pipe(lessFilter)
-        .pipe(less())
-        .pipe(concat("style.css"))
-        .pipe(minifycss())
-        .pipe(header(info, {pkg: pkg}))
-        .pipe(lessFilter.restore)
+        .pipe(useref())
         .pipe(cssFilter)
         .pipe(minifycss())
         .pipe(cssFilter.restore)
-        .pipe(gulp.dest("dist/css"))
+        .pipe(lessFilter)
+        .pipe(less())
+        .pipe(minifycss())
+        .pipe(lessFilter.restore)
+        .pipe(htmlmin(options))
+        .pipe(gulp.dest("dist/assets/"));
+});
+//在html文件中引入include文件
+gulp.task("includefile", ["useref"], function () {
+    var source = gulp.src(["dist/assets/css/*.css"], {read: false});
+    return gulp.src(["src/assets/*.html", "!src/assets/index.html"])
+        .pipe(fileinclude({
+            prefix: '@@',
+            basepath: '@file'
+        }))
+        .pipe(inject(source))
+        .pipe(usemin())
+        .pipe(htmlmin(options))
+        .pipe(gulp.dest("dist/assets/"))
         .pipe(connect.reload());
 });
 //雪碧图操作，先拷贝图片合并压缩css
-gulp.task("sprite", ["copy:images", "cssmin"], function () {
+gulp.task("sprite", ["copy:images", "useref"], function () {
     var timestamp = +new Date();
-    return gulp.src("dist/css/default.css")
+    return gulp.src("dist/assets/css/style.min.css")
         .pipe(spriter({
             //生成sprite的位置
-            spriteSheet: "dist/images/spritesheet" + timestamp + ".png",
+            spriteSheet: "dist/assets/images/spritesheet" + timestamp + ".png",
             //修改样式文件引用图片地址路径
             pathToSpriteSheetFromCSS: "../images/spritesheet" +timestamp + ".png",
             spritesmithOptions: {
@@ -110,7 +111,7 @@ gulp.task("sprite", ["copy:images", "cssmin"], function () {
             }
         }))
         .pipe(base64())
-        .pipe(gulp.dest("dist/css"));
+        .pipe(gulp.dest("dist/assets/css"));
 });
 var myDevConfig = Object.create(webpackConfig);
 var devCompiler = webpack(myDevConfig);
@@ -126,20 +127,29 @@ gulp.task("build-js", ['includefile'], function(callback) {
 });
 //将js加上10位md5,并修改html中的引用路径，该动作依赖build-js
 gulp.task('md5:js', ['build-js'], function () {
-    gulp.src('dist/js/*.js')
-        .pipe(md5(10, 'dist/*.html'))
-        .pipe(gulp.dest('dist/js'));
+    gulp.src('dist/assets/js/*.js')
+        .pipe(md5(10, 'dist/assets/*.html'))
+        .pipe(gulp.dest('dist/assets/js'));
 });
 //将css加上10位md5，并修改html中的引用路径，该动作依赖sprite
 gulp.task('md5:css', ['sprite'], function () {
-    return gulp.src('dist/css/*.css')
-        .pipe(md5(10, 'dist/*.html'))
-        .pipe(gulp.dest('dist/css'));
+    return gulp.src('dist/assets/css/*.css')
+        .pipe(md5(10, 'dist/assets/*.html'))
+        .pipe(gulp.dest('dist/assets/css'));
 });
 //清除文件
 gulp.task('clean', function () {
     return gulp.src(['dist'])
         .pipe(clean())
+});
+//压缩合并样式文件，包括先把less文件编译成css和引入的第三方css
+gulp.task("cssmin", function () {
+    return gulp.src(["src/assets/css/main.less"])
+        .pipe(less())
+        .pipe(minifycss())
+        .pipe(rename("style.min.css"))
+        .pipe(gulp.dest("dist/assets/css"))
+        .pipe(connect.reload());
 });
 //监听文件变化
 gulp.task('watch', function () {
@@ -147,7 +157,7 @@ gulp.task('watch', function () {
 });
 //定义web服务器
 gulp.task('connect', function () {
-    console.log('connect---------------------------------------------');
+    console.log('服务器启动---------------------------------------------');
     connect.server({
         root: host.path,
         port: host.port,
@@ -164,12 +174,14 @@ gulp.task('open', function () {
 });
 
 //发布
-gulp.task('default', ['connect', 'includefile', 'md5:css', 'md5:js', 'open']);
+gulp.task('default', function () {
+    runSequence("clean", 'connect', 'copy:images', "useref", ['includefile', 'sprite', 'md5:css', 'build-js', 'md5:js'], "copy:file", "open");
+});
 
 //开发
 gulp.task('dev', function(){
-        runSequence("connect", 'copy:images', ['includefile', 'cssmin', 'build-js'], 'watch', 'open');
-    });
+    runSequence("clean", "connect", 'copy:images', "useref", ['includefile', 'build-js'], "copy:file", 'watch', 'open');
+});
 
 //测试
 gulp.task("test", function(){

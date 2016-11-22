@@ -3,7 +3,7 @@ var webpack = require("webpack"),                                               
     path = require("path"),                                                     //用于处理目录的对象
     fs = require("fs"),                                                         //文件系统
     UglifyJsPlugin = webpack.optimize.UglifyJsPlugin;                           //压缩js文件
-var srcDir = path.resolve(process.cwd(), "src");        //获取到js文件所在的根目录，process.cwd()：当前工作目录；path.resolve:相当于不断的调用系统的cd命令
+var srcDir = path.resolve(process.cwd(), "src", "assets");        //获取到js文件所在的根目录，process.cwd()：当前工作目录；path.resolve:相当于不断的调用系统的cd命令
 
 //获取多页面的每个入口文件，用于配置中的entry
 function getEntry() {
@@ -12,12 +12,10 @@ function getEntry() {
     var matchs =[], files = {};
     dirs.forEach(function (item) {
         matchs = item.match(/(.+)\.js$/);               //匹配所有的js文件
-        console.log(matchs);
         if(matchs){
             files[matchs[1]] = path.resolve(srcDir, "js", item);
         }
     });
-    console.log(JSON.stringify(files));
     return files;
 }
 module.exports = {
@@ -26,8 +24,8 @@ module.exports = {
     entry: getEntry(),                              //文件入口目录
     //entry: __dirname + "/src/js/main.js",
     output: {
-        path: __dirname + "/dist/js",               //文件输出目录
-        publicPath: "dist/js/",                     //用于配置文件发布路径，如CDN或本地服务器
+        path: __dirname + "/dist/assets/js",               //文件输出目录
+        publicPath: "dist/assets/js/",                     //用于配置文件发布路径，如CDN或本地服务器
         filename: "[name].js",                      //根据入口文件输出的对应多个文件名
         chunkFilename: "[chunkhash].js"
     },
@@ -49,10 +47,14 @@ module.exports = {
             compress: {
                 warnings: false
             }
+        }),
+        new webpack.ProvidePlugin({
+            $: 'jquery',
+            _: "underscore"
         })
     ],
     devServer: {
-        contentBase: "./dist",
+        contentBase: "./dist/assets/",
         colors: true,
         historyApiFallback: true,
         inline: true

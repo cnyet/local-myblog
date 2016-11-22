@@ -4,5 +4,6 @@ src/revision/
 bower_components/
 build/
 dist/
+src/mock/
 *.log
 *.bin
