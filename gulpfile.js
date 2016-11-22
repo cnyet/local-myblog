@@ -47,6 +47,8 @@ var browser = os.platform() === "linux" ? "Google chrome" : (
 var options = {
     removeComments: true,                   //清除html注释
     collapseBooleanAttributes: true,        //省略布尔属性值
+    collapseWhitespace: true,               //压缩HTML
+    preserveLineBreaks: true,               //每行保持一个换行符
     removeEmptyAttributes: true,            //删除所有空格作为属性值
     removeScriptTypeAttributes: true,       //删除script的type属性
     removeStyleTypeAttributes: true,        //删除link的type属性
