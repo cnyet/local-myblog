@@ -68,7 +68,10 @@ gulp.task("copy:file", function () {
 //编译首页css
 gulp.task("useref", function () {
     var cssFilter = filter("**/components.min.css", {restore: true}),
-        lessFilter = filter("**/style.min.css", {restore: true});
+        lessFilter = filter("**/style.min.css", {restore: true}),
+        cssOptions = {
+            keepSpecialComments: 0              //删除所有注释
+        };
     return gulp.src("src/assets/index.html")
         .pipe(fileinclude({
             prefix: '@@',
@@ -76,11 +79,11 @@ gulp.task("useref", function () {
         }))
         .pipe(useref())
         .pipe(cssFilter)
-        .pipe(minifycss())
+        .pipe(minifycss(cssOptions))
         .pipe(cssFilter.restore)
         .pipe(lessFilter)
         .pipe(less())
-        .pipe(minifycss())
+        .pipe(minifycss(cssOptions))
         .pipe(lessFilter.restore)
         .pipe(htmlmin(options))
         .pipe(gulp.dest("dist/assets/"));
@@ -88,7 +91,7 @@ gulp.task("useref", function () {
 //在html文件中引入include文件
 gulp.task("includefile", ["useref"], function () {
     var source = gulp.src(["dist/assets/css/*.css"], {read: false});
-    return gulp.src(["src/assets/*.html", "!src/assets/index.html"])
+    return gulp.src(["src/assets/*.html", "!src/assets/index.html"], {base: "src"})
         .pipe(fileinclude({
             prefix: '@@',
             basepath: '@file'
@@ -96,7 +99,7 @@ gulp.task("includefile", ["useref"], function () {
         .pipe(inject(source))
         .pipe(usemin())
         .pipe(htmlmin(options))
-        .pipe(gulp.dest("dist/assets/"))
+        .pipe(gulp.dest("dist/"))
         .pipe(connect.reload());
 });
 //雪碧图操作，先拷贝图片合并压缩css
@@ -146,16 +149,30 @@ gulp.task('clean', function () {
 });
 //压缩合并样式文件，包括先把less文件编译成css和引入的第三方css
 gulp.task("cssmin", function () {
-    return gulp.src(["src/assets/css/main.less"])
+    var options = {
+        keepSpecialComments: 0              //删除所有注释
+    };
+    gulp.src(["src/assets/css/dedault.css"])
+        .pipe(minifycss(options))
+        .pipe(rename("components.min.css"))
+        .pipe(gulp.dest("dist/assets/css"))
+        .pipe(connect.reload());
+    gulp.src(["src/assets/css/main.less"])
         .pipe(less())
-        .pipe(minifycss())
+        .pipe(plumber())
+        .pipe(csslint())
+        .pipe(minifycss(options))
         .pipe(rename("style.min.css"))
+        .pipe(plumber.stop())
         .pipe(gulp.dest("dist/assets/css"))
         .pipe(connect.reload());
 });
 //监听文件变化
 gulp.task('watch', function () {
-    return gulp.watch('src/**/*', ['includefile', 'cssmin', 'build-js']);
+    gulp.watch('src/assets/css/**', ["cssmin"]);
+    gulp.watch('src/assets/js/**', ['build-js']);
+    gulp.watch('src/assets/*.html', ['includefile']);
+    gulp.watch('src/assets/include/**', ['includefile']);
 });
 //定义web服务器
 gulp.task('connect', function () {
@@ -185,7 +202,7 @@ gulp.task('dev', function(){
     runSequence("clean", "connect", 'copy:images', "useref", ['includefile', 'build-js'], "copy:file", 'watch', 'open');
 });
 
-//测试
-gulp.task("test", function(){
-    runSequence("clean");
+//启动服务
+gulp.task("start", function(){
+    runSequence("connect", "watch", "open");
 });
