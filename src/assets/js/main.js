@@ -1,3 +1,7 @@
+require("bootstrap");
+
 $(function (cb) {
-   console.log("hello");
+   _.each([1, 2, 3], function (e) {
+      console.log(e);
+   });
 });
