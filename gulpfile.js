@@ -62,7 +62,7 @@ gulp.task("copy:images", function () {
 });
 //拷贝其他文件到目标文件夹
 gulp.task("copy:file", function () {
-    return gulp.src(["src/controllers/**/*", "src/modules/**/*"], {base: "src"})
+    return gulp.src(["src/controllers/**/*", "src/modules/**/*", "src/assets/fonts/**/*"], {base: "src"})
         .pipe(gulp.dest("dist/"));
 });
 //编译首页css
