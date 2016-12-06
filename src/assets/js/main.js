@@ -3,8 +3,31 @@ require("bootstrap");
 (function ($, undefined) {
    "use strict";
 
-   var $document = $(document);
+   var $document = $(document),
+       $nav = $('#navigation');
    $document.ready(function () {
+      var h1 = 100;
+      var h2 = 180;
+      var ss = $document.scrollTop();
+      $(window).scroll(function () {
+         var s = $document.scrollTop();
+         if (s < h1) {
+            $nav.removeClass('fixed-nav');
+         }
+         if (s > h1) {
+            $nav.addClass('fixed-nav');
+         }
+         if (s > h2) {
+            $nav.addClass('toDown-nav');
+            if (s > ss) {
+               $nav.removeClass('toUp-nav');
+            } else {
+               $nav.addClass('toUp-nav');
+            }
+            ss = s;
+         }
+      });
+
       $(".scroll-down").arctic_scroll();
    });
 
@@ -36,4 +59,6 @@ require("bootstrap");
       });
 
    };
+
+
 })(jQuery);

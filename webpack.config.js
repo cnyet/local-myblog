@@ -35,7 +35,10 @@ module.exports = {
             jquery: __dirname + "/bower_components/jquery/dist/jquery.min.js",
             bootstrap: __dirname + "/bower_components/bootstrap/dist/js/bootstrap.min.js",
             zepto: __dirname + "/bower_components/zepto/zepto.min.js",
-            underscore: __dirname + "/bower_components/underscore/underscore-min.js"
+            underscore: __dirname + "/bower_components/underscore/underscore-min.js",
+            handlebars: __dirname + "/bower_components/handlebars/handlebars.js",
+            swiiper: __dirname + "/bower_components/swiper/dist/js/swiper.jquery.min.js",
+            vue: __dirname + "/bower_components/vue/dist/vue.min.js"
         }
     },
     //提供全局的变量，在模块中使用无需用require引入

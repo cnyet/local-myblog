@@ -52,6 +52,7 @@
     "jshint": "^2.9.4",
     "jshint-stylish": "^2.2.1",
     "run-sequence": "^1.2.2",
+    "vue": "^2.1.4",
     "webpack": "^1.13.3"
   },
   "dependencies": {

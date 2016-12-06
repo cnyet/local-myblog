@@ -62,8 +62,13 @@ gulp.task("copy:images", function () {
 });
 //拷贝其他文件到目标文件夹
 gulp.task("copy:file", function () {
-    return gulp.src(["src/controllers/**/*", "src/modules/**/*", "src/assets/fonts/**/*"], {base: "src"})
+    return gulp.src(["src/controllers/**/*", "src/modules/**/*"], {base: "src"})
         .pipe(gulp.dest("dist/"));
+});
+//将字体拷贝到目标文件夹
+gulp.task("copy:fonts", function () {
+    return gulp.src(["bower_components/font-awesome/fonts/**"])
+        .pipe(gulp.dest("dist/assets/fonts/"));
 });
 //编译首页css
 gulp.task("useref", function () {
@@ -194,12 +199,12 @@ gulp.task('open', function () {
 
 //发布
 gulp.task('default', function () {
-    runSequence("clean", 'connect', 'copy:images', "useref", ['includefile', 'sprite', 'md5:css', 'build-js', 'md5:js'], "copy:file", "open");
+    runSequence("clean", 'connect', 'copy:images', "useref", ['includefile', 'sprite', 'md5:css', 'build-js', 'md5:js'], "copy:fonts", "copy:file", "open");
 });
 
 //开发
 gulp.task('dev', function(){
-    runSequence("clean", "connect", 'copy:images', "useref", ['includefile', 'build-js'], "copy:file", 'watch', 'open');
+    runSequence("clean", "connect", 'copy:images', "useref", ['includefile', 'build-js'], "copy:fonts", "copy:file", 'watch', 'open');
 });
 
 //启动服务

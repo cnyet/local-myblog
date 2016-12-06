@@ -20,6 +20,10 @@
   },
   "devDependencies": {
     "bootstrap": "^3.3.7",
-    "underscore": "^1.8.3"
+    "underscore": "^1.8.3",
+    "swiper": "^3.4.0",
+    "font-awesome": "Font-Awesome#^4.7.0",
+    "vue": "^2.1.4",
+    "handlebars": "^4.0.5"
   }
 }
