@@ -11,9 +11,16 @@
     <title>文章列表</title>
 </head>
 <body>
-<h1>文章列表</h1>
+<header class="main-header">
+    @@include("include/nav.html")
+</header>
+<div class="main-container container" id="content">
+    <h1>文章列表</h1>
 
-@@include("include/foot.inc")
+</div>
+<footer class="container text-center">
+    @@include("include/foot.inc")
+</footer>
 <script type="text/javascript" src="js/common.js"></script>
 <script type="text/javascript" src="js/list.js"></script>
 </body>

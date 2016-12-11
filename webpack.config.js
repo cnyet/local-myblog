@@ -37,7 +37,7 @@ module.exports = {
             zepto: __dirname + "/bower_components/zepto/zepto.min.js",
             underscore: __dirname + "/bower_components/underscore/underscore-min.js",
             handlebars: __dirname + "/bower_components/handlebars/handlebars.js",
-            swiiper: __dirname + "/bower_components/swiper/dist/js/swiper.jquery.min.js",
+            swiper: __dirname + "/bower_components/swiper/dist/js/swiper.min.js",
             vue: __dirname + "/bower_components/vue/dist/vue.min.js"
         }
     },

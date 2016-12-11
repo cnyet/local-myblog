@@ -95,7 +95,7 @@ gulp.task("useref", function () {
 });
 //在html文件中引入include文件
 gulp.task("includefile", ["useref"], function () {
-    var source = gulp.src(["dist/assets/css/*.css"], {read: false});
+    var source = gulp.src(["dist/assets/css/*.css"], {read: false}, {relative: true});
     return gulp.src(["src/assets/*.html", "!src/assets/index.html"], {base: "src"})
         .pipe(fileinclude({
             prefix: '@@',

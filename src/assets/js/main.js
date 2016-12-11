@@ -1,4 +1,5 @@
 require("bootstrap");
+require("swiper");
 
 (function ($, undefined) {
    "use strict";
@@ -29,7 +30,17 @@ require("bootstrap");
       });
 
       $(".scroll-down").arctic_scroll();
+        //鼠标控制页面滚动
+       var mySwiper = new Swiper('.swiper-container', {
+           pagination: '.swiper-pagination',
+           direction: 'vertical',
+           slidesPerView: 1,
+           paginationClickable: true,
+           spaceBetween: 30,
+           mousewheelControl: true
+       });
    });
+
 
    $.fn.arctic_scroll = function (options) {
       var defaults = {
