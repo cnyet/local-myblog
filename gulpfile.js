@@ -95,13 +95,18 @@ gulp.task("useref", function () {
 });
 //在html文件中引入include文件
 gulp.task("includefile", ["useref"], function () {
-    var source = gulp.src(["dist/assets/css/*.css"], {read: false}, {relative: true});
+    var source = gulp.src(["dist/assets/css/*.css"], {read: false}),
+        injectOp = {
+            ignorePath: "/dist/assets/",
+            removeTags: true,
+            addRootSlash: false
+        };
     return gulp.src(["src/assets/*.html", "!src/assets/index.html"], {base: "src"})
         .pipe(fileinclude({
             prefix: '@@',
             basepath: '@file'
         }))
-        .pipe(inject(source))
+        .pipe(inject(source, injectOp))
         .pipe(usemin())
         .pipe(htmlmin(options))
         .pipe(gulp.dest("dist/"))
