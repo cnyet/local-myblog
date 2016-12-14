@@ -33,6 +33,9 @@ var gulp = require("gulp"),                                 //gulp基础库
     webpack = require("webpack"),                           //webpack基础库
     webpackConfig = require('./webpack.config.js');         //引入webpack的配置文件
 
+var path = require("path"),
+    server = require("./server"),
+    route = require(__dirname);
 var host = {
     path: "dist/assets/",
     port: 3000,
@@ -186,12 +189,13 @@ gulp.task('watch', function () {
 });
 //定义web服务器
 gulp.task('connect', function () {
-    console.log('服务器启动---------------------------------------------');
     connect.server({
         root: host.path,
         port: host.port,
         livereload: true
     });
+
+    console.log('========服务器已启动=======');
 });
 //自动在浏览器发开页面
 gulp.task('open', function () {

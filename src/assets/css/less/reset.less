@@ -1,5 +1,9 @@
+/*=====================定义变量==========================*/
+
+
+/*======================================================*/
 .navbar{
-  font-size:1.4rem;
+  font-size:1.6rem;
   -webkit-border-radius:0;
   -moz-border-radius:0;
   border-radius:0;
@@ -37,6 +41,36 @@
     }
     &:focus{
       color:@txtFocus;
+    }
+  }
+}
+.fixed-nav{
+  color:@txtColor;
+  .navbar-nav{
+    & > li{
+      & > a{
+        color:@txtColor;
+        &:hover{
+          color:@txtBlack;
+        }
+        &:focus{
+          color:@txtBlack;
+        }
+      }
+    }
+    & > .active{
+      & > a{
+        color: @txtColor;
+      }
+    }
+  }
+  .navbar-brand{
+    color:@txtColor;
+    &:hover{
+      color:@txtBlack;
+    }
+    &:focus{
+      color:@txtBlack;
     }
   }
 }
