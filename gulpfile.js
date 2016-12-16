@@ -63,9 +63,14 @@ gulp.task("copy:images", function () {
     return gulp.src("src/assets/images/**/*", {base: "src"})
         .pipe(gulp.dest("dist/"));
 });
-//拷贝其他文件到目标文件夹
+//拷贝模块文件到目标文件夹
 gulp.task("copy:file", function () {
     return gulp.src(["src/controllers/**/*", "src/modules/**/*"], {base: "src"})
+        .pipe(gulp.dest("dist/"));
+});
+//拷贝其他文件到目标文件夹
+gulp.task("copy:config", function () {
+    return gulp.src(["./server.js"])
         .pipe(gulp.dest("dist/"));
 });
 //将字体拷贝到目标文件夹
@@ -194,7 +199,6 @@ gulp.task('connect', function () {
         port: host.port,
         livereload: true
     });
-
     console.log('========服务器已启动=======');
 });
 //自动在浏览器发开页面
@@ -205,18 +209,22 @@ gulp.task('open', function () {
             uri: 'http://localhost:3000/'
         }));
 });
-
-//发布
-gulp.task('default', function () {
-    runSequence("clean", 'connect', 'copy:images', "useref", ['includefile', 'sprite', 'md5:css', 'build-js', 'md5:js'], "copy:fonts", "copy:file", "open");
-});
-
-//开发
-gulp.task('dev', function(){
-    runSequence("clean", "connect", 'copy:images', "useref", ['includefile', 'build-js'], "copy:fonts", "copy:file", 'watch', 'open');
+//执行默认任务
+gulp.task('default', function(){
+    runSequence("clean", "connect", 'copy:images', "useref", ['includefile', 'build-js'], "copy:file", "copy:config", "copy:fonts", 'watch', 'open');
 });
 
 //启动服务
 gulp.task("start", function(){
     runSequence("connect", "watch", "open");
+});
+
+//开发
+gulp.task('dev', function(){
+    runSequence("clean", "connect", 'copy:images', "useref", ['includefile', 'build-js'], "copy:file", "copy:config", "copy:fonts", 'watch', 'open');
+});
+
+//发布
+gulp.task('deploy', function () {
+    runSequence("clean", 'connect', 'copy:images', "useref", ['includefile', 'sprite', 'md5:css', 'build-js', 'md5:js'], "copy:file", "copy:config", "copy:fonts", "open");
 });

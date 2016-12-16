@@ -1,7 +1,10 @@
 /******路由设置********/
+var express = require("express"),
+    router = express.Router();
 
-function route(pathName) {
-    console.log("route a request for "+pathName);
-}
+router.use("/",
+    require("./home"),
+    require("./list")
+);
 
-exports.route = route;
+module.exports = router;
