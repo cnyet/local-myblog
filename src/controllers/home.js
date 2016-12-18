@@ -3,7 +3,6 @@ var express = require("express"),
 
 router.get("/", callBack);
 router.get("/index", callBack);
-router.get("index.html", callBack);
 
 function callBack(req, res){
     //res.send("index");

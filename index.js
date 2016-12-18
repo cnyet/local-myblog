@@ -4,7 +4,7 @@ var http = require("http"),                             //内置的原生http模
     path = require("path"),                             //文件目录对象
     fs = require("fs"),                                 //文件系统
     url = require("url"),                               //处理请求的url
-    mime = require("./src/controllers/mime").types,     //MIME文件类型
+    mime = require("./src/config/mime").types,     //MIME文件类型
     hbs = require("hbs"),                               //模板引擎
     favicon = require("serve-favicon"),                 //引入favicon
     logger = require("morgan"),                         //引入记录日志模块
@@ -25,7 +25,7 @@ app.set("port", process.env.PORT || host.port);                 //设置端口�
 app.set("views", path.join(__dirname, "src/views"));                //设置页面文件所在的目录
 app.engine(".html", hbs.__express);                             //设置模板文件的扩展名为.html
 app.set("view engine", "html");                                 //设置渲染引擎渲染html页面
-//app.use(favicon);                                               //调用express中间件，默认路径是"/",app.use()的顺序决定中间件优先级
+app.use(favicon(__dirname + "/dist/assets/images/favicon.ico"));                                               //调用express中间件，默认路径是"/",app.use()的顺序决定中间件优先级
 app.use(logger("dev"));                                         //调用日志
 app.use(bodyParser.json());                                     //调用express的json
 app.use(bodyParser.urlencoded({extended: false}));              //调用解析url的中间件
@@ -33,7 +33,7 @@ app.use(cookieParser());                                        //调用cookie
 app.use(express.static(path.join(__dirname, host.path)));       //调用静态资源服务器(path.join()是将多个参数组合成一个path)
 
 app.use(routers);                                               //调用路由规则
-app.use(function (req, res, next) {
+app.use(function (req, res) {
     var err = new Error("404");
     err.status = 404;
     res.send("404");
@@ -50,5 +50,5 @@ if("development" == app.get("env")){
 
 //启动一个服务器
 http.createServer(app).listen(host.port, function () {
-    console.log("server start.");
+    console.log("server start: localhost:3000");
 });

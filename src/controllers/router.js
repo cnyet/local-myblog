@@ -2,9 +2,7 @@
 var express = require("express"),
     router = express.Router();
 
-router.use("/",
-    require("./home"),
-    require("./list")
-);
+router.use(require("./home"));
+router.use(require("./list"));
 
 module.exports = router;
