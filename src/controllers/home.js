@@ -1,12 +1,14 @@
 var express = require("express"),
-    router = express.Router();
+    router = express.Router(),
+    userModel = require("../models/home");
 
-router.get("/", callBack);
-router.get("/index", callBack);
-
-function callBack(req, res){
-    //res.send("index");
-    res.render("test", {title: "Express"});
-}
+router.get("/index", function (req, res) {
+    var msg;
+    userModel.showUser(req, res, function (err, result) {
+        msg = JSON.parse(result);
+        console.log(msg[0]);
+        res.render("test", msg[0]);
+    });
+});
 
 module.exports = router;

@@ -33,11 +33,8 @@ var gulp = require("gulp"),                                 //gulp基础库
     webpack = require("webpack"),                           //webpack基础库
     webpackConfig = require('./webpack.config.js');         //引入webpack的配置文件
 
-var path = require("path"),
-    server = require("./server"),
-    route = require(__dirname);
 var host = {
-    path: "dist/assets/",
+    path: "dist/",
     port: 3000,
     html: "index.html"
 };
@@ -63,14 +60,14 @@ gulp.task("copy:images", function () {
     return gulp.src("src/assets/images/**/*", {base: "src"})
         .pipe(gulp.dest("dist/"));
 });
-//拷贝模块文件到目标文件夹
+//拷贝控制文件到目标文件夹
 gulp.task("copy:file", function () {
-    return gulp.src(["src/controllers/**/*", "src/modules/**/*"], {base: "src"})
+    return gulp.src(["src/controllers/**/*", "src/models/**/*", "src/config/**", "src/util/**"], {base: "src"})
         .pipe(gulp.dest("dist/"));
 });
 //拷贝其他文件到目标文件夹
 gulp.task("copy:config", function () {
-    return gulp.src(["./server.js"])
+    return gulp.src(["./index.js", "./bin/*", "./.bowerrc", "./bower.json", "./package.json"], {base: "./"})
         .pipe(gulp.dest("dist/"));
 });
 //将字体拷贝到目标文件夹
@@ -85,7 +82,7 @@ gulp.task("useref", function () {
         cssOptions = {
             keepSpecialComments: 0              //删除所有注释
         };
-    return gulp.src("src/assets/index.html")
+    return gulp.src("src/views/index.html")
         .pipe(fileinclude({
             prefix: '@@',
             basepath: '@file'
@@ -99,7 +96,7 @@ gulp.task("useref", function () {
         .pipe(minifycss(cssOptions))
         .pipe(lessFilter.restore)
         .pipe(htmlmin(options))
-        .pipe(gulp.dest("dist/assets/"));
+        .pipe(gulp.dest("dist/views/"));
 });
 //在html文件中引入include文件
 gulp.task("includefile", ["useref"], function () {
@@ -109,7 +106,7 @@ gulp.task("includefile", ["useref"], function () {
             removeTags: true,
             addRootSlash: false
         };
-    return gulp.src(["src/assets/*.html", "!src/assets/index.html"], {base: "src"})
+    return gulp.src(["src/views/*.html", "!src/views/index.html"], {base: "src"})
         .pipe(fileinclude({
             prefix: '@@',
             basepath: '@file'
@@ -189,7 +186,7 @@ gulp.task("cssmin", function () {
 gulp.task('watch', function () {
     gulp.watch('src/assets/css/**', ["cssmin"]);
     gulp.watch('src/assets/js/**', ['build-js']);
-    gulp.watch('src/assets/*.html', ['includefile']);
+    gulp.watch('src/views/*.html', ['includefile']);
     gulp.watch('src/assets/include/**', ['includefile']);
 });
 //定义web服务器
@@ -206,12 +203,12 @@ gulp.task('open', function () {
     return gulp.src('')
         .pipe(gulpOpen({
             app: browser,
-            uri: 'http://localhost:3000/'
+            uri: 'http://localhost:3000/views/'
         }));
 });
 //执行默认任务
 gulp.task('default', function(){
-    runSequence("clean", "connect", 'copy:images', "useref", ['includefile', 'build-js'], "copy:file", "copy:config", "copy:fonts", 'watch', 'open');
+    runSequence("clean", 'copy:images', "useref", ['includefile', 'build-js'], "copy:file", "copy:config", "copy:fonts");
 });
 
 //启动服务
