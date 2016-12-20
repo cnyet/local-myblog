@@ -20,7 +20,7 @@ function getEntry() {
 }
 module.exports = {
     cache: true,
-    devtool: 'source-map',                          //配置生成Source Maps，选择合适的选项
+    devtool: 'eval-source-map',                          //配置生成Source Maps，选择合适的选项
     entry: getEntry(),                              //文件入口目录
     //entry: __dirname + "/src/js/main.js",
     output: {

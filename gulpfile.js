@@ -1,3 +1,4 @@
+//gulp开发版本配置
 var gulp = require("gulp"),                                 //gulp基础库
     os = require('os'),                                     //获取操作系统对象
     jshint = require("gulp-jshint"),                        //审查js代码
@@ -14,6 +15,8 @@ var gulp = require("gulp"),                                 //gulp基础库
     base64 = require("gulp-css-base64"),                    //把小图片的URL替换为Base64编码图片
     concat = require("gulp-concat"),                        //文件合并
     rename = require("gulp-rename"),                        //文件重命名
+    jeditor = require("gulp-json-editor"),                  //编辑json对象
+    merge = require('merge-stream'),                        //将多个流合并成一个返回
     rev = require("gulp-rev"),                              //加MD5版本号生成无缓存文件
     md5 = require('gulp-md5-plus'),                         //给页面引用的js,css,图片引用路径加MD5
     revReplace = require("gulp-rev-replace"),               //重写加了MD5的文件名
@@ -67,7 +70,16 @@ gulp.task("copy:file", function () {
 });
 //拷贝其他文件到目标文件夹
 gulp.task("copy:config", function () {
-    return gulp.src(["./index.js", "./bin/*", "./.bowerrc", "./bower.json", "./package.json"], {base: "./"})
+    var packageFilter = filter("package.json", {restore: true});
+    return gulp.src(["./index.js", "./package.json", "./README.md"], {base: "./"})
+        .pipe(packageFilter)
+        .pipe(jeditor(function (json) {
+            if (json.devDependencies) {
+                delete json.devDependencies;
+            }
+            return json;
+        }))
+        .pipe(packageFilter.restore)
         .pipe(gulp.dest("dist/"));
 });
 //将字体拷贝到目标文件夹
@@ -75,38 +87,37 @@ gulp.task("copy:fonts", function () {
     return gulp.src(["bower_components/font-awesome/fonts/**"])
         .pipe(gulp.dest("dist/assets/fonts/"));
 });
-//编译首页css
-gulp.task("useref", function () {
-    var cssFilter = filter("**/components.min.css", {restore: true}),
-        lessFilter = filter("**/style.min.css", {restore: true}),
+//压缩合并样式文件，包括先把less文件编译成css和引入的第三方css
+gulp.task("build-css", function () {
+    var cssFilter = filter("src/*/*/default.css", {restore: true}),
+        lessFilter = filter("src/*/*/main.less", {restore: true}),
         cssOptions = {
             keepSpecialComments: 0              //删除所有注释
         };
-    return gulp.src("src/views/index.html")
-        .pipe(fileinclude({
-            prefix: '@@',
-            basepath: '@file'
-        }))
-        .pipe(useref())
+    return gulp.src("src/assets/css/*.{css,less}")
         .pipe(cssFilter)
+        .pipe(concat("components.min.css"))
         .pipe(minifycss(cssOptions))
         .pipe(cssFilter.restore)
         .pipe(lessFilter)
         .pipe(less())
+        .pipe(plumber())
+        .pipe(concat("style.min.css"))
         .pipe(minifycss(cssOptions))
+        .pipe(plumber.stop())
         .pipe(lessFilter.restore)
-        .pipe(htmlmin(options))
-        .pipe(gulp.dest("dist/views/"));
+        .pipe(gulp.dest("dist/assets/css/"))
+        .pipe(connect.reload());
 });
 //在html文件中引入include文件
-gulp.task("includefile", ["useref"], function () {
+gulp.task("includefile", ["build-css"], function () {
     var source = gulp.src(["dist/assets/css/*.css"], {read: false}),
         injectOp = {
-            ignorePath: "/dist/assets/",
+            ignorePath: "/dist/",
             removeTags: true,
-            addRootSlash: false
+            addRootSlash: true
         };
-    return gulp.src(["src/views/*.html", "!src/views/index.html"], {base: "src"})
+    return gulp.src(["src/views/*.html"], {base: "src"})
         .pipe(fileinclude({
             prefix: '@@',
             basepath: '@file'
@@ -118,9 +129,9 @@ gulp.task("includefile", ["useref"], function () {
         .pipe(connect.reload());
 });
 //雪碧图操作，先拷贝图片合并压缩css
-gulp.task("sprite", ["copy:images", "useref"], function () {
+gulp.task("sprite", ["copy:images", "build-css"], function () {
     var timestamp = +new Date();
-    return gulp.src("dist/assets/css/style.min.css")
+    return gulp.src("dist/assets/css/style.min.css", {base: "src"})
         .pipe(spriter({
             //生成sprite的位置
             spriteSheet: "dist/assets/images/spritesheet" + timestamp + ".png",
@@ -131,7 +142,7 @@ gulp.task("sprite", ["copy:images", "useref"], function () {
             }
         }))
         .pipe(base64())
-        .pipe(gulp.dest("dist/assets/css"));
+        .pipe(gulp.dest("dist"));
 });
 var myDevConfig = Object.create(webpackConfig);
 var devCompiler = webpack(myDevConfig);
@@ -162,29 +173,9 @@ gulp.task('clean', function () {
     return gulp.src(['dist'])
         .pipe(clean())
 });
-//压缩合并样式文件，包括先把less文件编译成css和引入的第三方css
-gulp.task("cssmin", function () {
-    var options = {
-        keepSpecialComments: 0              //删除所有注释
-    };
-    gulp.src(["src/assets/css/dedault.css"])
-        .pipe(minifycss(options))
-        .pipe(rename("components.min.css"))
-        .pipe(gulp.dest("dist/assets/css"))
-        .pipe(connect.reload());
-    gulp.src(["src/assets/css/main.less"])
-        .pipe(less())
-        .pipe(plumber())
-        .pipe(csslint())
-        .pipe(minifycss(options))
-        .pipe(rename("style.min.css"))
-        .pipe(plumber.stop())
-        .pipe(gulp.dest("dist/assets/css"))
-        .pipe(connect.reload());
-});
 //监听文件变化
 gulp.task('watch', function () {
-    gulp.watch('src/assets/css/**', ["cssmin"]);
+    gulp.watch('src/assets/css/**', ["build-css"]);
     gulp.watch('src/assets/js/**', ['build-js']);
     gulp.watch('src/views/*.html', ['includefile']);
     gulp.watch('src/assets/include/**', ['includefile']);
@@ -208,20 +199,20 @@ gulp.task('open', function () {
 });
 //执行默认任务
 gulp.task('default', function(){
-    runSequence("clean", 'copy:images', "useref", ['includefile', 'build-js'], "copy:file", "copy:config", "copy:fonts");
+    runSequence("clean", 'copy:images', "build-css", ['includefile', 'build-js'], "copy:file", "copy:config", "copy:fonts");
 });
 
 //启动服务
 gulp.task("start", function(){
-    runSequence("connect", "watch", "open");
+    runSequence("watch", "connect", "open");
 });
 
 //开发
 gulp.task('dev', function(){
-    runSequence("clean", "connect", 'copy:images', "useref", ['includefile', 'build-js'], "copy:file", "copy:config", "copy:fonts", 'watch', 'open');
+    runSequence("clean", 'copy:images', "build-css", ['includefile', 'build-js'], "copy:file", "copy:config", "copy:fonts", 'watch', "connect", 'open');
 });
 
 //发布
 gulp.task('deploy', function () {
-    runSequence("clean", 'connect', 'copy:images', "useref", ['includefile', 'sprite', 'md5:css', 'build-js', 'md5:js'], "copy:file", "copy:config", "copy:fonts", "open");
+    runSequence("clean", 'copy:images', "build-css", ['includefile', 'sprite', 'md5:css', 'build-js', 'md5:js'], "copy:file", "copy:config", "copy:fonts", 'connect', "open");
 });

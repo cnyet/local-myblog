@@ -41,7 +41,6 @@ require("swiper");
        });
    });
 
-
    $.fn.arctic_scroll = function (options) {
       var defaults = {
              elem: $(this),

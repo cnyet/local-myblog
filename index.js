@@ -4,6 +4,7 @@ var http = require("http"),                             //内置的原生http模
     path = require("path"),                             //文件目录对象
     fs = require("fs"),                                 //文件系统
     url = require("url"),                               //处理请求的url
+    debug = require("debug")("local-node:server"),      //调试
     mime = require("./util/mime").types,                //MIME文件类型
     config = require("./config/config"),                //公共配置文件
     hbs = require("hbs"),                               //模板引擎
@@ -16,6 +17,8 @@ var http = require("http"),                             //内置的原生http模
     errorhandler = require("errorhandler"),             //解析错误信息
     app = express();
 
+var port = normalizePort(process.env.PORT || config.port);
+app.set("port", port);                                          //设置端口
 app.set("views", path.join(__dirname, "/views"));               //设置页面文件所在的目录
 app.engine(".html", hbs.__express);                             //设置模板文件的扩展名为.html
 app.set("view engine", "html");                                 //设置渲染引擎渲染html页面
@@ -45,4 +48,51 @@ app.use(function(err, req, res, next) {
     res.send(err.status);
 });
 
-modules.exports = app;
+//创建http服务器
+var server = http.createServer(app);
+//服务器监听端口，注册事件
+server.listen(port, function () {
+    console.log(">> server start: http://localhost:"+port);
+});
+server.on("error", onError);
+server.on("listening", onListening);
+
+//格式化端口号
+function normalizePort(val) {
+    var port = parseInt(val, 10);
+    if(isNaN(port)){
+        return val;
+    }
+    if(port >= 0){
+        return port;
+    }
+    return false;
+}
+
+//服务器错误事件的回调函数
+function onError(error) {
+    if(error.syscall !== "listen"){
+        throw error;
+    }
+    var bind = typeof port === "string" ? "Pipe"+port : "Port"+port;
+
+    switch(error.code){
+        case "EACCES":
+            console.error(bind + "requires elevated privileges");
+            process.exit(1);
+            break;
+        case "EADDRINUSE":
+            console.error(bind + "is already in use.");
+            process.exit(1);
+            break;
+        default:
+            throw error;
+    }
+}
+
+//服务器监听事件回调函数
+function onListening() {
+    var addr = server.address(),
+        bind = typeof addr === "string" ? "pipe" + addr : "port" + addr.port;
+    debug("Listening on " + bind);
+}
