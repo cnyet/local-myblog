@@ -15,6 +15,7 @@ var http = require("http"),                             //内置的原生http模
     cookieParser = require("cookie-parser"),            //解析cookie
     session = require("express-session"),               //解析session
     errorhandler = require("errorhandler"),             //解析错误信息
+    reload = require('reload'),                         //浏览器自动刷新
     app = express();
 
 var port = normalizePort(process.env.PORT || config.port);
@@ -56,6 +57,9 @@ server.listen(port, function () {
 });
 server.on("error", onError);
 server.on("listening", onListening);
+
+//自动刷新浏览器
+reload(server, app);
 
 //格式化端口号
 function normalizePort(val) {

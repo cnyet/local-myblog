@@ -1,13 +1,13 @@
 /*
-* webpack开发环境配置
-* webpack --display-error-details
+* webpack发布环境配置
+* webpack --config src/config/webpack.deploy.js
 */
 var webpack = require("webpack"),                                               //webpack基础库
     CommonsChunkPlugin = require("webpack/lib/optimize/CommonsChunkPlugin"),    //将公共文件合并成一个
     path = require("path"),                                                     //用于处理目录的对象
     fs = require("fs"),                                                         //文件系统
     UglifyJsPlugin = webpack.optimize.UglifyJsPlugin;                           //压缩js文件
-var srcDir = path.resolve(process.cwd(), "src", "assets");        //获取到js文件所在的根目录，process.cwd()：当前工作目录；path.resolve:相当于不断的调用系统的cd命令
+var srcDir = path.resolve(process.cwd(), "src", "assets");                      //获取到js文件所在的根目录，process.cwd()：当前工作目录；path.resolve:相当于不断的调用系统的cd命令
 
 //获取多页面的每个入口文件，用于配置中的entry
 function getEntry() {
@@ -25,12 +25,11 @@ function getEntry() {
 module.exports = {
     cache: true,
     devtool: 'eval-source-map',                          //配置生成Source Maps，选择合适的选项
-    entry: getEntry(),                              //文件入口目录
-    //entry: __dirname + "/src/js/main.js",
+    entry: getEntry(),                                   //文件入口目录
     output: {
-        path: __dirname + "/src/static/js",               //文件输出目录
-        publicPath: "/src/static/js",                     //用于配置文件发布路径，如CDN或本地服务器
-        filename: "[name].js",                      //根据入口文件输出的对应多个文件名
+        path: __dirname + "/dist/assets/js",             //文件输出目录
+        publicPath: "dist/assets/js/",                   //用于配置文件发布路径，如CDN或本地服务器
+        filename: "[name].js",                           //根据入口文件输出的对应多个文件名
         chunkFilename: "[chunkhash].js"
     },
     //配置别名，在项目中可缩减引用路径
@@ -62,10 +61,9 @@ module.exports = {
         })
     ],
     devServer: {
-        contentBase: "./src/static",
+        contentBase: "../../dist/assets/",
         colors: true,
         historyApiFallback: true,
         inline: true
     }
 };
-
