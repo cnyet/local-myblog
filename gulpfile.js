@@ -24,7 +24,7 @@ var gulp = require("gulp"),                                 //gulp基础库
     revReplace = require("gulp-rev-replace"),               //重写加了MD5的文件名
     clean = require("gulp-clean"),                          //清除文件
     revCollector = require("gulp-rev-collector"),           //根据map文件替换页面引用文件
-    gutil = require("gulp-util"),                            //提供很多常用函数
+    gutil = require("gulp-util"),                           //提供很多常用函数
     usemin = require("gulp-usemin"),                        //文件合并到指定的目录，将样式和脚本直接嵌入到页面中，移除部分文件，为文件执行各种任务
     useref = require("gulp-useref"),                        //合并html中引入的静态文件
     fileinclude = require("gulp-file-include"),             //在html中引入模板文件
@@ -36,11 +36,13 @@ var gulp = require("gulp"),                                 //gulp基础库
     inject = require("gulp-inject"),                        //指定需要插入html引用文件的列表
     gulpExpress = require("gulp-express"),                  //express服务器自动刷新
     connect = require("gulp-connect"),                      //web服务器
+    browserSync = require('browser-sync').create(),         //浏览器同步模块
+    reload = browserSync.reload,                            //重载
     webpack = require("webpack"),                           //webpack基础库
     webpackConfig = require('./webpack.config.js');         //引入webpack的配置文件
 
 var host = {
-    path: "src/static/",
+    path: "dist/",
     port: 3000,
     html: "index.html"
 };
@@ -52,17 +54,39 @@ var browser = os.platform() === "linux" ? "Google chrome" : (
     )
 );
 
+//拷贝控制文件到目标文件夹
+gulp.task("copy:files", function () {
+    return gulp.src(["src/server/controllers/**", "src/server/models/**", "src/server/config/**", "src/server/util/**"], {base: "src/server/"})
+        .pipe(gulp.dest("dist/"));
+});
+
+//拷贝其他文件到目标文件夹
+gulp.task("copy:config", function () {
+    var packageFilter = filter("package.json", {restore: true});
+    return gulp.src(["./src/index.js", "./package.json", "./README.md"])
+        .pipe(packageFilter)
+        .pipe(jeditor(function (json) {
+            if (json.devDependencies) {
+                //删除开发环境的依赖列表
+                delete json.devDependencies;
+            }
+            return json;
+        }))
+        .pipe(packageFilter.restore)
+        .pipe(gulp.dest("dist/"));
+});
+
 //将字体拷贝到目标文件夹
 gulp.task("copy:fonts", function () {
     return gulp.src(["bower_components/font-awesome/fonts/**"])
-        .pipe(gulp.dest("src/static/fonts/"));
+        .pipe(gulp.dest("dist/assets/fonts/"));
 });
 
 //将图片拷贝到目标目录
 gulp.task("copy:images", function () {
-    return gulp.src("src/assets/images/**/*")
+    return gulp.src("src/client/images/**/*")
         .pipe(imagemin())
-        .pipe(gulp.dest("src/static/images"));
+        .pipe(gulp.dest("dist/assets/images"));
 });
 
 //压缩合并样式文件，包括先把less文件编译成css和引入的第三方css
@@ -72,7 +96,7 @@ gulp.task("build-css", function () {
         cssOptions = {
             keepSpecialComments: 0                  //删除所有注释
         };
-    return gulp.src("src/assets/css/*.{css,less}")
+    return gulp.src("src/client/css/*.{css,less}")
         .pipe(cssFilter)
         .pipe(concat("components.min.css"))
         .pipe(minifycss(cssOptions))
@@ -84,15 +108,16 @@ gulp.task("build-css", function () {
         .pipe(minifycss(cssOptions))
         .pipe(plumber.stop())
         .pipe(lessFilter.restore)
-        .pipe(gulp.dest("src/static/css/"))
-        .pipe(connect.reload());
+        .pipe(gulp.dest("dist/assets/css/"))
+        .pipe(reload({stream: true}));
+        //.pipe(connect.reload());
 });
 
 //在html文件中引入include文件
-gulp.task("build-html", ["build-css"], function () {
-    var source = gulp.src(["src/static/css/*.css"], {read: false}),
+gulp.task("build-html", function () {
+    var source = gulp.src(["dist/assets/css/*.css"], {read: false}),
         injectOp = {
-            ignorePath: "/src/static/",
+            ignorePath: "/dist/",
             removeTags: true,
             addRootSlash: false
         },
@@ -107,7 +132,7 @@ gulp.task("build-html", ["build-css"], function () {
             minifyJS: true,                         //压缩页面js
             minifyCSS: true                         //压缩页面css
         };
-    return gulp.src(["src/views/*.html"])
+    return gulp.src(["src/server/views/*.html"])
         .pipe(fileinclude({
             prefix: '@@',
             basepath: '@file'
@@ -115,17 +140,18 @@ gulp.task("build-html", ["build-css"], function () {
         .pipe(inject(source, injectOp))
         .pipe(usemin())
         .pipe(htmlmin(options))
-        .pipe(gulp.dest("src/static/"))
-        .pipe(connect.reload());
+        .pipe(gulp.dest("dist/views/"))
+        .pipe(reload({stream: true}));
+        //.pipe(connect.reload());
 });
 
 //雪碧图操作，先拷贝图片合并压缩css
 gulp.task("sprite", ["copy:images", "build-css"], function () {
     var timestamp = +new Date();
-    return gulp.src("src/static/css/style.min.css")
+    return gulp.src("dist/assets/css/style.min.css")
         .pipe(spriter({
             //生成sprite的位置
-            spriteSheet: "src/static/images/spritesheet" + timestamp + ".png",
+            spriteSheet: "dist/assets/images/spritesheet" + timestamp + ".png",
             //修改样式文件引用图片地址路径
             pathToSpriteSheetFromCSS: "../images/spritesheet" +timestamp + ".png",
             spritesmithOptions: {
@@ -133,13 +159,13 @@ gulp.task("sprite", ["copy:images", "build-css"], function () {
             }
         }))
         .pipe(base64())
-        .pipe(gulp.dest("src/static/css/"));
+        .pipe(gulp.dest("dist/assets/css/"));
 });
 
 //引用webpack对js进行操作
 var myDevConfig = Object.create(webpackConfig);
 var devCompiler = webpack(myDevConfig);
-gulp.task("build-js", ['build-html'], function(callback) {
+gulp.task("build-js", function(callback) {
     devCompiler.run(function(err, stats) {
         if(err) throw new gutil.PluginError("webpack:build-js", err);
         gutil.log("[webpack:build-js]", stats.toString({
@@ -150,32 +176,31 @@ gulp.task("build-js", ['build-html'], function(callback) {
 });
 
 //css,js文件加MD5，并修改html中的引用路径
-gulp.task("md5:files", ["sprite", "build-js"], function () {
+gulp.task("md5:files", function () {
     var stream1 = function () {
-            return gulp.src('src/static/css/*.css')
+            return gulp.src('dist/assets/css/*.css')
                 .pipe(plugins.md5Plus(10, 'src/static/*.html'))
-                .pipe(gulp.dest('src/static/css'));
+                .pipe(gulp.dest('dist/assets/css'));
         },
         stream2 = function () {
-            return gulp.src('src/static/js/*.js')
+            return gulp.src('dist/assets/js/*.js')
                 .pipe(plugins.md5Plus(10, 'src/static/*.html'))
-                .pipe(gulp.dest('src/static/js'));
+                .pipe(gulp.dest('dist/assets/js'));
         };
     return merge(stream1(), stream2());
 });
 
-//清除文件
+//清除目标文件夹
 gulp.task('clean', function () {
-    return gulp.src(['src/static'])
+    return gulp.src(['dist'])
         .pipe(clean());
 });
 
 //监听文件变化
 gulp.task('watch', function () {
-    gulp.watch('src/assets/css/**', ["build-css"]);
-    gulp.watch('src/assets/js/**', ['build-js']);
-    gulp.watch('src/views/*.html', ['build-html']);
-    gulp.watch('src/views/include/**', ['build-html']);
+    gulp.watch('src/client/css/**', ["build-css"]);
+    gulp.watch('src/client/js/**', ['build-js']);
+    gulp.watch('src/server/views/**', ['build-html']);
 });
 
 //定义web服务器
@@ -186,6 +211,23 @@ gulp.task('connect', function () {
         livereload: true
     });
     console.log('========服务器已启动=======');
+});
+
+//browserSync代理服务器自动刷新页面
+gulp.task("browser-sync", function () {
+    browserSync.init({
+        ui: false,                      //禁止端口访问可视化控制页面
+        notify: false,                  //不显示在浏览器中的任何通知。
+        //open: "local",                    //自动打开本地url
+        //browser: "google chrome",       //默认在chrome中打开页面
+        proxy: "localhost:3000",        //代理的主机地址
+        //files: ["./src/client/**", "./src/server/views/**"],     //监听文件
+        port: 3000                      //代理的端口
+    });
+
+    gulp.watch('src/client/css/**', ["build-css"]);
+    gulp.watch('src/client/js/**', ['build-js']).on("change", reload);
+    gulp.watch('src/server/views/**', ['build-html']);
 });
 
 //自动在浏览器发开页面
@@ -209,7 +251,7 @@ gulp.task("start", function(){
 
 //开发
 gulp.task('dev', function(){
-    runSequence("clean", "build-css", "build-html", "build-js", ["copy:images", "copy:fonts"], "watch", "connect", "open");
+    runSequence("clean", "build-css", "build-html", "build-js", ["copy:images", "copy:fonts", "copy:files", "copy:config"], "browser-sync");
 });
 
 //开发加MD5

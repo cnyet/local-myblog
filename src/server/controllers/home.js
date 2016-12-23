@@ -1,6 +1,6 @@
 var express = require("express"),
     router = express.Router(),
-    userModel = require("../models/home");
+    userModel = require("./home");
 
 router.get("/index", function (req, res) {
     var msg;

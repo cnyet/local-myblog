@@ -8,7 +8,7 @@ var gulp = require("gulp"),                                 //gulp基础库
     runSequence = require("run-sequence"),                  //串行依次执行任务
     merge = require('merge-stream'),                        //将多个流合并成一个返回
     webpack = require("webpack"),                           //webpack基础库
-    webpackConfig = require('./webpack.deploy');            //引入webpack的配置文件
+    webpackConfig = require('./webpack.deploy.js');            //引入webpack的配置文件
 
 var host = {
     path: "dist/",

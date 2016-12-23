@@ -15,7 +15,7 @@ var http = require("http"),                             //内置的原生http模
     cookieParser = require("cookie-parser"),            //解析cookie
     session = require("express-session"),               //解析session
     errorhandler = require("errorhandler"),             //解析错误信息
-    reload = require('reload'),                         //浏览器自动刷新
+    reload = require('reload'),                         //后台服务器重启后浏览器自动刷新
     app = express();
 
 var port = normalizePort(process.env.PORT || config.port);
@@ -51,15 +51,16 @@ app.use(function(err, req, res, next) {
 
 //创建http服务器
 var server = http.createServer(app);
+
+//当修改后台文件服务器重启以后自动刷新浏览器
+reload(server, app);
+
 //服务器监听端口，注册事件
 server.listen(port, function () {
     console.log(">> server start: http://localhost:"+port);
 });
 server.on("error", onError);
 server.on("listening", onListening);
-
-//自动刷新浏览器
-reload(server, app);
 
 //格式化端口号
 function normalizePort(val) {
