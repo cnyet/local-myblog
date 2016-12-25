@@ -1,9 +1,9 @@
 .idea/
 node_modules/
-src/assets/revision/
+assets/revision/
 bower_components/
 build/
 dist/
-src/assets/mock/
+assets/mock/
 *.log
 *.bin
