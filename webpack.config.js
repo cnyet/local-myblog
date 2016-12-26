@@ -8,7 +8,7 @@ var webpack = require("webpack"),                                               
     path = require("path"),                                                     //用于处理目录的对象
     fs = require("fs"),                                                         //文件系统
     UglifyJsPlugin = webpack.optimize.UglifyJsPlugin;                           //压缩js文件
-var srcDir = path.resolve(process.cwd(), "src", "client");        //获取到js文件所在的根目录，process.cwd()：当前工作目录；path.resolve:相当于不断的调用系统的cd命令
+var srcDir = path.resolve(process.cwd(), "src", "assets");        //获取到js文件所在的根目录，process.cwd()：当前工作目录；path.resolve:相当于不断的调用系统的cd命令
 
 //获取多页面的每个入口文件，用于配置中的entry
 function getEntry() {

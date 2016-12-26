@@ -54,49 +54,20 @@ var browser = os.platform() === "linux" ? "Google chrome" : (
     )
 );
 
-//拷贝控制文件到目标文件夹
-gulp.task("copy:files", function () {
-    return gulp.src(["src/server/controllers/**", "src/server/models/**", "src/server/config/**", "src/server/util/**"], {base: "src/server/"})
-        .pipe(gulp.dest("dist/"));
-});
-
-//拷贝其他文件到目标文件夹
-gulp.task("copy:config", function () {
-    var packageFilter = filter("package.json", {restore: true});
-    return gulp.src(["./src/index.js", "./package.json", "./README.md"])
-        .pipe(packageFilter)
-        .pipe(jeditor(function (json) {
-            if (json.devDependencies) {
-                //删除开发环境的依赖列表
-                delete json.devDependencies;
-            }
-            return json;
-        }))
-        .pipe(packageFilter.restore)
-        .pipe(gulp.dest("dist/"));
-});
-
 //将字体拷贝到目标文件夹
 gulp.task("copy:fonts", function () {
     return gulp.src(["bower_components/font-awesome/fonts/**"])
-        .pipe(gulp.dest("dist/assets/fonts/"));
-});
-
-//将图片拷贝到目标目录
-gulp.task("copy:images", function () {
-    return gulp.src("src/client/images/**/*")
-        .pipe(imagemin())
-        .pipe(gulp.dest("dist/assets/images"));
+        .pipe(gulp.dest("src/assets/fonts/"));
 });
 
 //压缩合并样式文件，包括先把less文件编译成css和引入的第三方css
 gulp.task("build-css", function () {
-    var cssFilter = filter("src/**/default.css", {restore: true}),
-        lessFilter = filter("src/**/main.less", {restore: true}),
+    var cssFilter = filter("src/assets/style/default.css", {restore: true}),
+        lessFilter = filter("src/assets/style/main.less", {restore: true}),
         cssOptions = {
             keepSpecialComments: 0                  //删除所有注释
         };
-    return gulp.src("src/client/css/*.{css,less}")
+    return gulp.src("src/assets/style/*.{css,less}")
         .pipe(cssFilter)
         .pipe(concat("components.min.css"))
         .pipe(minifycss(cssOptions))
@@ -113,55 +84,6 @@ gulp.task("build-css", function () {
         //.pipe(connect.reload());
 });
 
-//在html文件中引入include文件
-gulp.task("build-html", function () {
-    var source = gulp.src(["dist/assets/css/*.css"], {read: false}),
-        injectOp = {
-            ignorePath: "/dist/",
-            removeTags: true,
-            addRootSlash: false
-        },
-        options = {
-            removeComments: true,                   //清除html注释
-            collapseBooleanAttributes: true,        //省略布尔属性值
-            collapseWhitespace: true,               //压缩HTML
-            preserveLineBreaks: true,               //每行保持一个换行符
-            removeEmptyAttributes: true,            //删除所有空格作为属性值
-            removeScriptTypeAttributes: true,       //删除script的type属性
-            removeStyleTypeAttributes: true,        //删除link的type属性
-            minifyJS: true,                         //压缩页面js
-            minifyCSS: true                         //压缩页面css
-        };
-    return gulp.src(["src/server/views/*.html"])
-        .pipe(fileinclude({
-            prefix: '@@',
-            basepath: '@file'
-        }))
-        .pipe(inject(source, injectOp))
-        .pipe(usemin())
-        .pipe(htmlmin(options))
-        .pipe(gulp.dest("dist/views/"))
-        .pipe(reload({stream: true}));
-        //.pipe(connect.reload());
-});
-
-//雪碧图操作，先拷贝图片合并压缩css
-gulp.task("sprite", ["copy:images", "build-css"], function () {
-    var timestamp = +new Date();
-    return gulp.src("dist/assets/css/style.min.css")
-        .pipe(spriter({
-            //生成sprite的位置
-            spriteSheet: "dist/assets/images/spritesheet" + timestamp + ".png",
-            //修改样式文件引用图片地址路径
-            pathToSpriteSheetFromCSS: "../images/spritesheet" +timestamp + ".png",
-            spritesmithOptions: {
-                padding: 10
-            }
-        }))
-        .pipe(base64())
-        .pipe(gulp.dest("dist/assets/css/"));
-});
-
 //引用webpack对js进行操作
 var myDevConfig = Object.create(webpackConfig);
 var devCompiler = webpack(myDevConfig);
@@ -173,21 +95,6 @@ gulp.task("build-js", function(callback) {
         }));
         callback();
     });
-});
-
-//css,js文件加MD5，并修改html中的引用路径
-gulp.task("md5:files", function () {
-    var stream1 = function () {
-            return gulp.src('dist/assets/css/*.css')
-                .pipe(plugins.md5Plus(10, 'src/static/*.html'))
-                .pipe(gulp.dest('dist/assets/css'));
-        },
-        stream2 = function () {
-            return gulp.src('dist/assets/js/*.js')
-                .pipe(plugins.md5Plus(10, 'src/static/*.html'))
-                .pipe(gulp.dest('dist/assets/js'));
-        };
-    return merge(stream1(), stream2());
 });
 
 //清除目标文件夹

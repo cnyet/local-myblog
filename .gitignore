@@ -6,4 +6,3 @@ build/
 dist/
 assets/mock/
 *.log
-*.bin
