@@ -2,7 +2,7 @@
 * 首页数据模型
 */
 var mysql = require("mysql"),
-    dbConfig = require(".././database"),
+    dbConfig = require("../config/database"),
     pool = mysql.createPool(dbConfig);              //创建数据库连接池
 
 module.exports = {

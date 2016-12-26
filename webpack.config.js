@@ -12,13 +12,13 @@ var srcDir = path.resolve(process.cwd(), "src", "assets");        //获取到js�
 
 //获取多页面的每个入口文件，用于配置中的entry
 function getEntry() {
-    var jsPath = path.resolve(srcDir, "js"),            //返回js文件所在目录
+    var jsPath = path.resolve(srcDir, "script"),            //返回js文件所在目录
         dirs = fs.readdirSync(jsPath);                  //返回一个包含“指定目录下所有文件名称”的数组对象
     var matchs =[], files = {};
     dirs.forEach(function (item) {
         matchs = item.match(/(.+)\.js$/);               //匹配所有的js文件
         if(matchs){
-            files[matchs[1]] = path.resolve(srcDir, "js", item);
+            files[matchs[1]] = path.resolve(srcDir, "script", item);
         }
     });
     return files;
@@ -29,8 +29,8 @@ module.exports = {
     entry: getEntry(),                              //文件入口目录
     //entry: __dirname + "/src/js/main.js",
     output: {
-        path: __dirname + "/dist/assets/js",               //文件输出目录
-        publicPath: "/dist/assets/js",                     //用于配置文件发布路径，如CDN或本地服务器
+        path: __dirname + "/src/assets/js",               //文件输出目录
+        publicPath: "/src/assets/js",                     //用于配置文件发布路径，如CDN或本地服务器
         filename: "[name].js",                      //根据入口文件输出的对应多个文件名
         chunkFilename: "[chunkhash].js"
     },
@@ -61,12 +61,12 @@ module.exports = {
             jQuery: "jquery",
             _: "underscore"
         })
-    ],
-    devServer: {
+    ]
+    /*devServer: {
         contentBase: "./dist/assets",
         colors: true,
         historyApiFallback: true,
         inline: true
-    }
+    }*/
 };
 

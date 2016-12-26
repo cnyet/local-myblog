@@ -1,5 +1,5 @@
 //MIME类型映射
-exports.types = {
+module.exports = {
     "css": "text/css",
     "gif": "image/gif",
     "html": "text/html",
