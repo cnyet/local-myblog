@@ -36,8 +36,7 @@ var gulp = require("gulp"),                                 //gulp基础库
     inject = require("gulp-inject"),                        //指定需要插入html引用文件的列表
     gulpExpress = require("gulp-express"),                  //express服务器自动刷新
     connect = require("gulp-connect"),                      //web服务器
-    browserSync = require('browser-sync').create('My server'),         //浏览器同步模块
-    reload = browserSync.reload,                            //重载
+    bs = require('browser-sync').create('My server'),         //浏览器同步模块
     nodemon = require("gulp-nodemon"),                      //重启后台服务器
     webpack = require("webpack"),                           //webpack基础库
     webpackConfig = require('./webpack.config.js');         //引入webpack的配置文件
@@ -81,8 +80,8 @@ gulp.task("build-css", function () {
         .pipe(plumber.stop())
         .pipe(lessFilter.restore)
         .pipe(gulp.dest("src/assets/css/"))
-        .pipe(reload({stream: true}));
-        //.pipe(connect.reload());
+        .pipe(bs.stream({match: "**/*.css"}))
+        .pipe(bs.reload({stream: true}));
 });
 
 //引用webpack对js进行操作
@@ -98,68 +97,44 @@ gulp.task("build-js", function(callback) {
     });
 });
 
+//启动后台服务器express
+gulp.task("nodemon", function() {
+    nodemon({
+        script: 'app.js',
+        ext: 'js html',
+        ignore: ['.idea', 'node_modules'],
+        env: {
+            'NODE_ENV': 'development'
+        }
+    })
+});
+
+//browserSync代理服务器自动刷新页面
+gulp.task("browser-sync", ["nodemon"], function () {
+    var files = ["src/config/**", "src/controllers/**", "src/models/**", "src/util/**"];
+    bs.init({
+        ui: false,                      //禁止端口访问可视化控制页面
+        notify: false,                  //不显示在浏览器中的任何通知。
+        browser: "google chrome",       //默认在chrome中打开页面
+        proxy: "localhost:3000",        //代理的主机地址
+        port: 3100                      //代理的端口
+    });
+    //监听文件变化
+    gulp.watch("src/views/**").on("change", bs.reload);
+    gulp.watch('src/assets/style/**', ["build-css"]);
+    gulp.watch('src/assets/script/**', ['build-js']).on("change", bs.reload);
+    gulp.watch(files).on("change", bs.reload);
+});
+
 //清除目标文件夹
 gulp.task('clean', function () {
     return gulp.src(['src/assets/css/**', "src/assets/js/**"])
         .pipe(clean());
 });
 
-//监听文件变化
-gulp.task('watch', function () {
-    gulp.watch('src/assets/css/**', ["build-css"]);
-    gulp.watch('src/assets/js/**', ['build-js']);
-});
-
-//定义web服务器
-/*gulp.task('connect', function () {
-    connect.server({
-        root: host.path,
-        port: host.port,
-        livereload: true
-    });
-    console.log('========服务器已启动=======');
-});*/
-
-//browserSync代理服务器自动刷新页面
-gulp.task("browser-sync", function () {
-    nodemon({
-        script: 'app.js',
-        ignore: ['.bin', '.idea', 'node_modules'],
-        env: {
-            'NODE_ENV': 'development'
-        }
-    });
-    browserSync.init({
-        ui: false,                      //禁止端口访问可视化控制页面
-        notify: false,                  //不显示在浏览器中的任何通知。
-        //open: "local",                    //自动打开本地url
-        //browser: "google chrome",       //默认在chrome中打开页面
-        proxy: "localhost:3000",        //代理的主机地址
-        //files: ["./src/client/**", "./src/server/views/**"],     //监听文件
-        port: 3000                      //代理的端口
-    });
-
-    gulp.watch('src/assets/css/**', ["build-css"]);
-    gulp.watch('src/assets/js/**', ['build-js']).on("change", reload);
-});
-
-//自动在浏览器发开页面
-gulp.task('open', function () {
-    return gulp.src('')
-        .pipe(gulpOpen({
-            app: browser,
-            uri: 'http://localhost:3000'
-        }));
-});
-
 //执行默认任务
 gulp.task('default', function(){
-    runSequence("clean", "build-css", "build-html", "build-js", ["copy:images", "copy:fonts"]);
-});
-
-//启动服务
-gulp.task("start", function(){
-    runSequence("watch", "connect", "open");
+    runSequence("clean", "copy:fonts", "build-css", "build-js");
 });
 
 //开发

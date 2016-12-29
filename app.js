@@ -18,11 +18,11 @@ var http = require("http"),                             //内置的原生http模
     reload = require('reload'),                         //后台服务器重启后浏览器自动刷新
     app = express();
 
-var port = normalizePort(process.env.PORT || config.port);
+var port = normalizePort(process.env.PORT || config.port);              //环境变量要是设置了PORT就用环境变量的PORT,否则用自定义的
 hbs.registerPartials(config.baseDir + '/views/partials');            //设置局部模板文件位置
 app.set("port", port);                                          //设置端口
-app.set("views", path.join(config.baseDir, "/views"));               //设置页面文件所在的目录
-//app.engine(".html", hbs.__express);                             //设置模板文件的扩展名为.html
+app.set("views", path.join(config.baseDir, "views"));               //设置页面文件所在的目录
+app.engine(".html", hbs.__express);                             //设置hbs来处理扩展名为.html文件
 app.set("view engine", "hbs");                                 //设置渲染引擎渲染html页面
 app.use(favicon(config.baseDir + "/assets/images/favicon.ico"));     //定义favicon图标,调用express中间件，默认路径是"/",app.use()的顺序决定中间件优先级
 app.use(logger("dev"));                                         //定义日志和输出级别
@@ -47,19 +47,20 @@ app.use(function(err, req, res, next) {
     // render the error page
     res.status(err.status || 500);
     //res.render('error');
-    res.send(err.status);
+    res.sendStatus(err.status);
 });
 
 //创建http服务器
 var server = http.createServer(app);
 
-//当修改后台文件服务器重启以后自动刷新浏览器
-reload(server, app);
-
 //服务器监听端口，注册事件
 server.listen(port, function () {
     console.log(">> server start: http://localhost:"+port);
 });
+
+//刷新服务器
+reload(server, app);
+
 server.on("error", onError);
 server.on("listening", onListening);
 
