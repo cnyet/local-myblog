@@ -1,6 +1,7 @@
 var express = require("express"),
     router = express.Router(),
-    userModel = require("../models/home");
+    userModel = require("../models/home"),
+    logger = require("../util/logger").getLogger("__filename");
 
 router.get("/", function (req, res) {
     res.render("index");
@@ -10,9 +11,10 @@ router.get("/index", function (req, res) {
     var msg;
     userModel.showUser(req, res, function (err, result) {
         msg = JSON.parse(result);
-        console.log(msg[0]);
-        res.render("test", msg[0]);
+        res.render("index");
     });
 });
+
+logger.info("请求index接口");
 
 module.exports = router;

@@ -41,19 +41,6 @@ var gulp = require("gulp"),                                 //gulp基础库
     webpack = require("webpack"),                           //webpack基础库
     webpackConfig = require('./webpack.config.js');         //引入webpack的配置文件
 
-var host = {
-    path: "dist/",
-    port: 3000,
-    html: "index.html"
-};
-
-//配置打开的浏览器，mac chrome: "Google chrome"
-var browser = os.platform() === "linux" ? "Google chrome" : (
-    os.platform() === "darwin" ? "Google chrome" : (
-        os.platform() === "win32" ? "chrome" : "firefox"
-    )
-);
-
 //将字体拷贝到目标文件夹
 gulp.task("copy:fonts", function () {
     return gulp.src(["bower_components/font-awesome/fonts/**"])
@@ -61,7 +48,7 @@ gulp.task("copy:fonts", function () {
 });
 
 //压缩合并样式文件，包括先把less文件编译成css和引入的第三方css
-gulp.task("build-css", function () {
+gulp.task("build-css", ["copy:fonts"], function () {
     var cssFilter = filter("src/assets/style/default.css", {restore: true}),
         lessFilter = filter("src/assets/style/main.less", {restore: true}),
         cssOptions = {
@@ -101,7 +88,6 @@ gulp.task("build-js", function(callback) {
 gulp.task("nodemon", function() {
     nodemon({
         script: 'app.js',
-        ext: 'js html',
         ignore: ['.idea', 'node_modules'],
         env: {
             'NODE_ENV': 'development'
@@ -111,19 +97,17 @@ gulp.task("nodemon", function() {
 
 //browserSync代理服务器自动刷新页面
 gulp.task("browser-sync", ["nodemon"], function () {
-    var files = ["src/config/**", "src/controllers/**", "src/models/**", "src/util/**"];
     bs.init({
-        ui: false,                      //禁止端口访问可视化控制页面
+        files: "src/views/**",
         notify: false,                  //不显示在浏览器中的任何通知。
         browser: "google chrome",       //默认在chrome中打开页面
         proxy: "localhost:3000",        //代理的主机地址
-        port: 3100                      //代理的端口
+        port: 3100,                      //代理的端口
+        ui: false
     });
     //监听文件变化
-    gulp.watch("src/views/**").on("change", bs.reload);
     gulp.watch('src/assets/style/**', ["build-css"]);
     gulp.watch('src/assets/script/**', ['build-js']).on("change", bs.reload);
-    gulp.watch(files).on("change", bs.reload);
 });
 
 //清除目标文件夹
@@ -134,11 +118,11 @@ gulp.task('clean', function () {
 
 //执行默认任务
 gulp.task('default', function(){
-    runSequence("clean", "copy:fonts", "build-css", "build-js");
+    runSequence("clean", "build-css", "build-js");
 });
 
 //开发
 gulp.task('dev', function(){
-    runSequence("copy:fonts", "build-css", "build-js", "browser-sync");
+    runSequence("build-css", "build-js", "browser-sync");
 });
 

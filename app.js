@@ -6,11 +6,11 @@ var http = require("http"),                             //内置的原生http模
     url = require("url"),                               //处理请求的url
     debug = require("debug")("local-node:server"),      //调试
     mime = require("./src/util/mime"),                  //MIME文件类型
-    config = require("./src/config/config"),                //公共配置文件
+    config = require("./src/config/config"),            //公共配置文件
     hbs = require("hbs"),                               //模板引擎
     favicon = require("serve-favicon"),                 //引入favicon
-    logger = require("morgan"),                         //引入记录日志模块
-    routers = require("./src/util/router"),                 //引入路由
+    logger = require("morgan"),                         //控制台打印日志
+    routers = require("./src/util/router"),             //引入路由
     bodyParser = require("body-parser"),                //解析客户端请求的body中的内容
     cookieParser = require("cookie-parser"),            //解析cookie
     session = require("express-session"),               //解析session
@@ -46,20 +46,24 @@ app.use(function(err, req, res, next) {
     res.locals.error = req.app.get('env') === 'development' ? err : {};
     // render the error page
     res.status(err.status || 500);
-    //res.render('error');
-    res.sendStatus(err.status);
+    if(err.status == 404){
+        res.render('/others/404');
+    }else{
+        res.render('/others/error');
+    }
+    //res.sendStatus(err.status);
 });
 
 //创建http服务器
 var server = http.createServer(app);
 
+//刷新服务器
+reload(server, app);
+
 //服务器监听端口，注册事件
 server.listen(port, function () {
     console.log(">> server start: http://localhost:"+port);
 });
-
-//刷新服务器
-reload(server, app);
 
 server.on("error", onError);
 server.on("listening", onListening);

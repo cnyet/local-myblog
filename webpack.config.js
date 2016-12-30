@@ -25,12 +25,12 @@ function getEntry() {
 }
 module.exports = {
     cache: true,
-    devtool: 'eval-source-map',                          //配置生成Source Maps，选择合适的选项
+    devtool: 'eval-source-map',                     //配置生成Source Maps，选择合适的选项
     entry: getEntry(),                              //文件入口目录
     //entry: __dirname + "/src/js/main.js",
     output: {
-        path: __dirname + "/src/assets/js",               //文件输出目录
-        publicPath: "/src/assets/js",                     //用于配置文件发布路径，如CDN或本地服务器
+        path: __dirname + "/src/assets/js",         //文件输出目录
+        publicPath: "/src/assets/js",               //用于配置文件发布路径，如CDN或本地服务器
         filename: "[name].js",                      //根据入口文件输出的对应多个文件名
         chunkFilename: "[chunkhash].js"
     },
