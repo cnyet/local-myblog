@@ -1,7 +1,7 @@
 var express = require("express"),
     router = express.Router(),
     userModel = require("../models/home"),
-    logger = require("../util/logger").getLogger("__filename");
+    logger = require("../util/logger").getLogger();
 
 router.get("/", function (req, res) {
     res.render("index");
