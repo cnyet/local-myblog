@@ -23,7 +23,7 @@ hbs.registerPartials(config.baseDir + '/views/partials');            //设置局
 app.set("port", port);                                          //设置端口
 app.set("views", path.join(config.baseDir, "views"));               //设置页面文件所在的目录
 app.engine(".html", hbs.__express);                             //设置hbs来处理扩展名为.html文件
-app.set("view engine", "hbs");                                 //设置渲染引擎渲染html页面
+app.set("view engine", "html");                                 //设置渲染引擎渲染html页面
 app.use(favicon(config.baseDir + "/assets/images/favicon.ico"));     //定义favicon图标,调用express中间件，默认路径是"/",app.use()的顺序决定中间件优先级
 app.use(logger("dev"));                                         //定义日志和输出级别
 app.use(bodyParser.json());                                     //定义解析<body>数据

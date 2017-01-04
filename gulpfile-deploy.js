@@ -1,6 +1,6 @@
 /*
 * gulp发布版本配置
-* gulp --gulpfile src/config/gulpfile-deploy.js [default|deploy]
+* gulp --gulpfile ./gulpfile-deploy.js [default|deploy]
 */
 var gulp = require("gulp"),                                 //gulp基础库
     plugins = require('gulp-load-plugins')(),               //自动require你在package.json中声明的依赖
@@ -8,7 +8,7 @@ var gulp = require("gulp"),                                 //gulp基础库
     runSequence = require("run-sequence"),                  //串行依次执行任务
     merge = require('merge-stream'),                        //将多个流合并成一个返回
     webpack = require("webpack"),                           //webpack基础库
-    webpackConfig = require('./webpack.deploy.js');            //引入webpack的配置文件
+    webpackConfig = require('./webpack.config');            //引入webpack的配置文件
 
 var host = {
     path: "dist/",
@@ -25,7 +25,7 @@ var browser = os.platform() === "linux" ? "Google chrome" : (
 
 //拷贝控制文件到目标文件夹
 gulp.task("copy:files", function () {
-    return gulp.src(["src/controllers/**/*", "src/models/**/*", "src/config/**", "src/util/**"], {base: "src"})
+    return gulp.src(["src/controllers/**/*", "src/models/**/*", "src/config/**", "src/util/**", "src/logs/"], {base: "src"})
         .pipe(gulp.dest("dist/"));
 });
 
@@ -100,13 +100,7 @@ gulp.task("build-html", ["build-css"], function () {
             minifyJS: true,                         //压缩页面js
             minifyCSS: true                         //压缩页面css
         };
-    return gulp.src(["src/views/*.html"], {base: "src"})
-        .pipe(plugins.fileInclude({
-            prefix: '@@',
-            basepath: '@file'
-        }))
-        .pipe(plugins.inject(source, injectOp))
-        .pipe(plugins.usemin())
+    return gulp.src(["src/views/**/*.html"], {base: "src"})
         .pipe(plugins.htmlmin(options))
         .pipe(gulp.dest("dist/"))
         .pipe(plugins.connect.reload());
@@ -192,7 +186,7 @@ gulp.task('open', function () {
 
 //执行默认任务
 gulp.task("default", function(){
-    runSequence("clean", "build-css", 'build-html', 'build-js', 'copy:images', 'sprite', ['copy:fonts', 'copy:config', 'copy:files'], 'connect', 'watch', 'open');
+    runSequence("clean", "build-css", 'build-html', 'build-js', 'copy:images', 'sprite', ['copy:fonts', 'copy:config', 'copy:files']);
 });
 
 //添加MD5，发布

@@ -1,4 +1,6 @@
-/******路由设置********/
+/**
+ * 路由设置
+ */
 var express = require("express"),
     router = express.Router();
 
