@@ -47,9 +47,10 @@ app.use(function(err, req, res, next) {
     // render the error page
     res.status(err.status || 500);
     if(err.status == 404){
-        res.render('/others/404');
+        console.log(err.status);
+        res.render('others/404');
     }else{
-        res.render('/others/error');
+        res.render('others/error');
     }
     //res.sendStatus(err.status);
 });
