@@ -32,7 +32,7 @@ gulp.task("copy:files", function () {
 //拷贝其他文件到目标文件夹
 gulp.task("copy:config", function () {
     var packageFilter = plugins.filter("package.json", {restore: true});
-    return gulp.src(["./index.js", "./package.json", "./README.md"], {base: "./"})
+    return gulp.src(["./src/index.js", "./package.json", "./README.md"], {base: "./"})
         .pipe(packageFilter)
         .pipe(plugins.jsonEditor(function (json) {
             if (json.devDependencies) {
