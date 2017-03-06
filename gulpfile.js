@@ -99,8 +99,9 @@ gulp.task("nodemon", function() {
 gulp.task("browser-sync", ["nodemon"], function () {
     bs.init({
         files: "src/views/**",
+        open: "local",
         notify: false,                  //不显示在浏览器中的任何通知。
-        browser: "chrome",       //默认在chrome中打开页面
+        browser: "google chrome",       //默认在chrome中打开页面
         proxy: "localhost:3000",        //代理的主机地址
         port: 3100,                      //代理的端口
         ui: false
